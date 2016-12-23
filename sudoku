@@ -1,0 +1,111 @@
+/*
+数独是一种游戏.玩家需要根据9×9盘面上的已知数字,推理出所有剩余空格的数字.
+满足每一行、每一列、每一个粗线宫内的数字均含1-9,不重复.
+每一道合格的数独谜题都有且仅有唯一答案.
+现在我们想知道，我们给定的数独是否是合格的数独（也就是说有解且唯一）.
+
+输入的第一行包含一个不超过10的整数T,表示数据的组数.
+接下来有T个部分,每两个部分之间用一个换行符隔开,每个部分描述一个数独局面.
+每个局面由9*9的方阵描述,若方阵中的数字为1~9,则说明该位置是已经被填好;若是0,则表示该位置为空.
+
+输出包含T行,每行包括一个“Yes”或“No”表示该数独是否合格.
+*/
+
+#include <iostream>
+#include <cstdio>
+
+using namespace std;
+
+int solve;
+
+//检查提供的数独是否合格
+bool pre_check(int a[][9]){
+    int i, j, k, x0, y0, x1, y1;
+    for(i=0;i<9;++i)
+        for(j=0;j<9;++j)
+            for(k=j+1;k<9;++k)
+                if(a[i][j]!=0&&a[i][j]==a[i][k]) return false;
+
+    for(i=0;i<9;++i)
+        for(j=0;j<9;++j)
+            for(k=j+1;k<9;++k)
+                if(a[j][i]!=0&&a[j][i]==a[k][i]) return false;
+
+    for(i=0;i<9;i+=3)
+        for(j=0;j<9;j+=3){
+            for(x0=0;x0<3;++x0)
+                for(y0=0;y0<3;++y0)
+                    for(x1=x0+1;x1<3;++x1)
+                        for(y1=y0+1;y1<3;++y1)
+                            if(a[i+x0][j+y0]!=0&&a[i+x0][j+y0]==a[i+x1][j+y1]) return false;
+        }
+    return true;
+}
+
+bool check(int a[][9], int num, int data){
+    int i, j, k, count=0, x0, y0;
+    i = num / 9;
+    j = num % 9;
+
+    //查行列
+    for(k=0;k<9;++k){
+        if(k==j) continue;
+        else if(a[i][k]==data) return false;
+    }
+    for(k=0;k<9;k++){
+        if(k==i) continue;
+        else if(a[k][j]==data) return false;
+    }
+
+    //查3*3方格
+    x0 = (i / 3) * 3;
+    y0 = (j / 3) * 3;
+    for(k=x0;k<x0+3;++k)
+        if(a[k][y0]==data) ++count;
+    for(k=x0;k<x0+3;++k)
+        if(a[k][y0+1]==data) ++count;
+    for(k=x0;k<x0+3;++k)
+        if(a[k][y0+2]==data) ++count;
+    if(count!=1) return false;
+
+    return true;
+}
+
+void dfs(int a[][9], int num){
+    if(num==82) {++solve; return;}
+
+    if(solve>1) return;
+    int i, j, k;
+
+    i = num / 9;
+    j = num % 9;
+    if(a[i][j]==0){
+        for(k=1;k<10;k++){
+            a[i][j] = k;
+            if(check(a,num,k))
+                {dfs(a,num+1);}
+        }
+        a[i][j] = 0;
+    }
+    else {dfs(a,num+1);}
+}
+
+int main()
+{
+    int i, t, a[9][9], j, k;
+
+    scanf("%d",&t);
+    for(i=0;i<t;++i){
+        solve = 0;
+        for(j=0;j<9;++j)
+            for(k=0;k<9;++k) scanf("%d",&a[j][k]);
+        if(!(pre_check(a))) {cout << "No" << '\n'; continue;}
+
+        dfs(a,0);
+
+        if(solve==1) printf("Yes\n");
+        else printf("No\n");
+    }
+
+    return 0;
+}
