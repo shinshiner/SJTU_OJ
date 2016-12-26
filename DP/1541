@@ -15,27 +15,33 @@ output n-k+1 numbers in a row separated by a blank.
 //区间最大问题用单调队列解
 #include <iostream>
 #include <cstdio>
-
 using namespace std;
 
-long long a[210000], q[300000];
+int a[200005], q[200005];
 
 int main()
 {
-    int n, k, i, head=0, tail=0;
-    cin >> k >> n;
-    for(i=0;i<n;++i) cin >> a[i];
-    for(i=0;i<k;++i){
-        if(head==tail) {q[tail++] = i; continue;}
-        while(head!=tail&&a[i]>a[q[tail-1]]) --tail;
-        q[tail++] = i;
+    int k, n, head = 0, tail = 0;
+
+    scanf("%d%d",&k,&n);
+    for(int i=0;i<n;++i) scanf("%d",&a[i]);
+
+    q[++tail] = 0;
+    for(int i=1;i<k;++i){
+        while(head!=tail)
+            if(a[i]>a[q[tail]]) --tail; else break;
+        q[++tail] = i;
     }
-    for(i=0;i<n-k+1;++i){
-        cout << a[q[head]] << ' ';
-        if(q[head]<=i) head++;
-        if(head==tail) {q[tail++] = i + k; continue;}
-        while(head!=tail&&a[i+k]>a[q[tail-1]]) --tail;
-        q[tail++] = i + k;
+
+    printf("%d ",a[q[head+1]]);
+    for(int i=k;i<n;++i){
+        while(head!=tail)
+            if(a[i]>a[q[tail]]) --tail; else break;
+        q[++tail] = i;
+
+        while(q[head+1]<=i-k) ++head;
+        printf("%d ",a[q[head+1]]);
     }
+
     return 0;
 }
