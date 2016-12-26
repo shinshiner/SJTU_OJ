@@ -12,100 +12,75 @@
 */
 
 #include <iostream>
-#include <cstdio>
 
 using namespace std;
 
-int solve;
+//本程序只是比较low的dfs,check函数可用几个bool数组优化
+int solve, a[10][10];
 
-//检查提供的数独是否合格
-bool pre_check(int a[][9]){
-    int i, j, k, x0, y0, x1, y1;
-    for(i=0;i<9;++i)
-        for(j=0;j<9;++j)
-            for(k=j+1;k<9;++k)
-                if(a[i][j]!=0&&a[i][j]==a[i][k]) return false;
-
-    for(i=0;i<9;++i)
-        for(j=0;j<9;++j)
-            for(k=j+1;k<9;++k)
-                if(a[j][i]!=0&&a[j][i]==a[k][i]) return false;
-
-    for(i=0;i<9;i+=3)
-        for(j=0;j<9;j+=3){
-            for(x0=0;x0<3;++x0)
-                for(y0=0;y0<3;++y0)
-                    for(x1=x0+1;x1<3;++x1)
-                        for(y1=y0+1;y1<3;++y1)
-                            if(a[i+x0][j+y0]!=0&&a[i+x0][j+y0]==a[i+x1][j+y1]) return false;
+bool check(int x, int y){
+    for(int i=0;i<9;++i){
+        if(i==y) continue;
+        else if(a[x][i]==a[x][y]) return false;
+    }
+    for(int i=0;i<9;++i){
+        if(i==x) continue;
+        else if(a[i][y]==a[x][y]) return false;
+    }
+    for(int x0=x/3*3;x0<x/3*3+3;++x0)
+        for(int y0=y/3*3;y0<y/3*3+3;++y0){
+            if(x0==x&&y0==y) continue;
+            else if(a[x0][y0]==a[x][y]) return false;
         }
     return true;
 }
 
-bool check(int a[][9], int num, int data){
-    int i, j, k, count=0, x0, y0;
-    i = num / 9;
-    j = num % 9;
-
-    //查行列
-    for(k=0;k<9;++k){
-        if(k==j) continue;
-        else if(a[i][k]==data) return false;
-    }
-    for(k=0;k<9;k++){
-        if(k==i) continue;
-        else if(a[k][j]==data) return false;
-    }
-
-    //查3*3方格
-    x0 = (i / 3) * 3;
-    y0 = (j / 3) * 3;
-    for(k=x0;k<x0+3;++k)
-        if(a[k][y0]==data) ++count;
-    for(k=x0;k<x0+3;++k)
-        if(a[k][y0+1]==data) ++count;
-    for(k=x0;k<x0+3;++k)
-        if(a[k][y0+2]==data) ++count;
-    if(count!=1) return false;
-
+bool precheck(){
+    for(int i=0;i<9;++i)
+        for(int j=0;j<9;++j){
+            if(a[i][j]==0) continue;
+            if(!check(i,j)) return false;
+        }
     return true;
 }
 
-void dfs(int a[][9], int num){
-    if(num==82) {++solve; return;}
-
-    if(solve>1) return;
-    int i, j, k;
-
-    i = num / 9;
-    j = num % 9;
-    if(a[i][j]==0){
-        for(k=1;k<10;k++){
-            a[i][j] = k;
-            if(check(a,num,k))
-                {dfs(a,num+1);}
-        }
-        a[i][j] = 0;
+void print(){   //自己验证答案用的函数
+    cout << '\n';
+    for(int i=0;i<9;++i){
+        for(int j=0;j<9;++j) cout << a[i][j] << ' ';
+        cout << '\n';
     }
-    else {dfs(a,num+1);}
+}
+
+void dfs(int n){
+    if(n==-1) {//print();
+                ++solve; return;}
+    int x = n / 9, y = n % 9;
+
+    if(a[x][y]!=0) dfs(n-1);
+    else{
+        for(int i=1;i<10;++i){
+            if(solve>1) break;
+            a[x][y] = i;
+            if(check(x,y)) dfs(n-1);
+        }
+        a[x][y] = 0;
+    }
 }
 
 int main()
 {
-    int i, t, a[9][9], j, k;
-
-    scanf("%d",&t);
-    for(i=0;i<t;++i){
+    int T;
+    cin >> T;
+    for(int i=0;i<T;++i){
+        for(int j=0;j<9;++j)
+            for(int k=0;k<9;++k) cin >> a[j][k];
         solve = 0;
-        for(j=0;j<9;++j)
-            for(k=0;k<9;++k) scanf("%d",&a[j][k]);
-        if(!(pre_check(a))) {cout << "No" << '\n'; continue;}
-
-        dfs(a,0);
-
-        if(solve==1) printf("Yes\n");
-        else printf("No\n");
+        if(!precheck()) {cout << "No\n"; continue;} //check函数只检查了插入点的合法性,
+                                                    //没有检查全局,所以要防止开始就不合法的局面
+        dfs(80);    //亲测从最后一个点开始扫比顺序扫更快
+        if(solve==1) cout << "Yes\n";
+        else cout << "No\n";
     }
-
     return 0;
 }
